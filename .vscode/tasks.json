@@ -1,0 +1,24 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build XC8 Project",
+            "type": "shell",
+            "command": "C:\\Program Files\\Microchip\\xc8\\v3.00\\bin\\xc8-cc.exe",
+            "args": [
+                "--chip=16f877a",
+                "-O./build/main.hex",
+                "./src/main.c",
+                "--outdir=./build/"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$xc8"
+            ],
+            "detail": "Compila el proyecto para el PIC16F877A usando XC8."
+        }
+    ]
+}
