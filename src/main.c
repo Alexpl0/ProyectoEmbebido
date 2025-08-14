@@ -12,7 +12,7 @@
 #pragma config WRT = OFF        // Flash Program Memory Write desactivado
 #pragma config CP = OFF         // Flash Program Memory Code Protection desactivado
 
-#define _XTAL_FREQ 4000000     // Frecuencia del oscilador (4MHz)
+#define _XTAL_FREQ 20000000     // Frecuencia del oscilador (20MHz)
 
 // Definición de pines
 #define LED_ABIERTO    RD0      // LED Verde - Estado Abierto
