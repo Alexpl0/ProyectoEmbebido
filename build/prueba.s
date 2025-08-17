@@ -334,13 +334,27 @@ EECON1 equ 018Ch ;#
 # 2361 "C:\Program Files\Microchip\xc8\v3.00\pic\include\proc/pic16f877a.h"
 EECON2 equ 018Dh ;# 
 	debug_source C
+	FNCALL	_main,_Toggle_Lock_State
+	FNCALL	_Toggle_Lock_State,_Servo_MoveTo0
+	FNCALL	_Toggle_Lock_State,_Servo_MoveTo180
 	FNROOT	_main
-	global	_PORTD
-_PORTD	set	0x8
-	global	_ADCON1
-_ADCON1	set	0x9F
-	global	_TRISD
-_TRISD	set	0x88
+	global	_currentState
+	global	_RB0
+_RB0	set	0x30
+	global	_RD1
+_RD1	set	0x41
+	global	_RD0
+_RD0	set	0x40
+	global	_RC2
+_RC2	set	0x3A
+	global	_TRISD1
+_TRISD1	set	0x441
+	global	_TRISD0
+_TRISD0	set	0x440
+	global	_TRISB0
+_TRISB0	set	0x430
+	global	_TRISC2
+_TRISC2	set	0x43A
 ; #config settings
 	config pad_punits      = on
 	config apply_mask      = off
@@ -349,8 +363,8 @@ _TRISD	set	0x88
 	config default_idlocs  = off
 	config FOSC = "HS"
 	config WDTE = "OFF"
-	config PWRTE = "OFF"
-	config BOREN = "OFF"
+	config PWRTE = "ON"
+	config BOREN = "ON"
 	config LVP = "OFF"
 	config CPD = "OFF"
 	config WRT = "OFF"
@@ -363,6 +377,17 @@ start_initialization:
 
 global __initialization
 __initialization:
+psect	bssCOMMON,class=COMMON,space=1,noexec
+global __pbssCOMMON
+__pbssCOMMON:
+_currentState:
+       ds      1
+
+	file	"build\prueba.s"
+	line	#
+; Clear objects allocated to COMMON
+psect cinit,class=CODE,delta=2,merge=1
+	clrf	((__pbssCOMMON)+0)&07Fh
 psect cinit,class=CODE,delta=2,merge=1
 global end_of_initialization,__end_of__initialization
 
@@ -375,20 +400,28 @@ ljmp _main	;jump to C main() function
 psect	cstackCOMMON,class=COMMON,space=1,noexec
 global __pcstackCOMMON
 __pcstackCOMMON:
+?_Servo_MoveTo0:	; 1 bytes @ 0x0
+?_Servo_MoveTo180:	; 1 bytes @ 0x0
+?_Toggle_Lock_State:	; 1 bytes @ 0x0
 ?_main:	; 1 bytes @ 0x0
-??_main:	; 1 bytes @ 0x0
+??_Servo_MoveTo0:	; 1 bytes @ 0x0
+??_Servo_MoveTo180:	; 1 bytes @ 0x0
+	ds	3
+??_Toggle_Lock_State:	; 1 bytes @ 0x3
+??_main:	; 1 bytes @ 0x3
+	ds	2
 ;!
 ;!Data Sizes:
 ;!    Strings     0
 ;!    Constant    0
 ;!    Data        0
-;!    BSS         0
+;!    BSS         1
 ;!    Persistent  0
 ;!    Stack       0
 ;!
 ;!Auto Spaces:
 ;!    Space          Size  Autos    Used
-;!    COMMON           14      0       0
+;!    COMMON           14      5       6
 ;!    BANK0            80      0       0
 ;!    BANK1            80      0       0
 ;!    BANK3            96      0       0
@@ -403,7 +436,8 @@ __pcstackCOMMON:
 ;!
 ;!Critical Paths under _main in COMMON
 ;!
-;!    None.
+;!    _Toggle_Lock_State->_Servo_MoveTo0
+;!    _Toggle_Lock_State->_Servo_MoveTo180
 ;!
 ;!Critical Paths under _main in BANK0
 ;!
@@ -422,7 +456,7 @@ __pcstackCOMMON:
 ;!    None.
 
 ;;
-;;Main: autosize = 0, tempsize = 0, incstack = 0, save=0
+;;Main: autosize = 0, tempsize = 2, incstack = 0, save=0
 ;;
 
 ;!
@@ -431,14 +465,29 @@ __pcstackCOMMON:
 ;! ---------------------------------------------------------------------------------
 ;! (Depth) Function   	        Calls       Base Space   Used Autos Params    Refs
 ;! ---------------------------------------------------------------------------------
-;! (0) _main                                                 0     0      0       0
+;! (0) _main                                                 2     2      0       0
+;!                                              3 COMMON     2     2      0
+;!                  _Toggle_Lock_State
 ;! ---------------------------------------------------------------------------------
-;! Estimated maximum stack depth 0
+;! (1) _Toggle_Lock_State                                    0     0      0       0
+;!                      _Servo_MoveTo0
+;!                    _Servo_MoveTo180
+;! ---------------------------------------------------------------------------------
+;! (2) _Servo_MoveTo180                                      3     3      0       0
+;!                                              0 COMMON     3     3      0
+;! ---------------------------------------------------------------------------------
+;! (2) _Servo_MoveTo0                                        3     3      0       0
+;!                                              0 COMMON     3     3      0
+;! ---------------------------------------------------------------------------------
+;! Estimated maximum stack depth 2
 ;! ---------------------------------------------------------------------------------
 ;!
 ;! Call Graph Graphs:
 ;!
 ;! _main (ROOT)
+;!   _Toggle_Lock_State
+;!     _Servo_MoveTo0
+;!     _Servo_MoveTo180
 ;!
 
 ;!Address spaces:
@@ -449,19 +498,19 @@ __pcstackCOMMON:
 ;!BITBANK1            80      0       0      0.0%
 ;!BITBANK3            96      0       0      0.0%
 ;!BITBANK2            96      0       0      0.0%
-;!COMMON              14      0       0      0.0%
+;!COMMON              14      5       6     42.9%
 ;!BANK0               80      0       0      0.0%
 ;!BANK1               80      0       0      0.0%
 ;!BANK3               96      0       0      0.0%
 ;!BANK2               96      0       0      0.0%
 ;!STACK                0      0       0      0.0%
-;!DATA                 0      0       0      0.0%
+;!DATA                 0      0       6      0.0%
 
 	global	_main
 
 ;; *************** function _main *****************
 ;; Defined at:
-;;		line 15 in file "./src/prueba.c"
+;;		line 59 in file "./src/prueba.c"
 ;; Parameters:    Size  Location     Type
 ;;		None
 ;; Auto vars:     Size  Location     Type
@@ -469,9 +518,124 @@ __pcstackCOMMON:
 ;; Return value:  Size  Location     Type
 ;;                  1    wreg      void 
 ;; Registers used:
-;;		status,2
+;;		wreg, status,2, status,0, pclath, cstack
 ;; Tracked objects:
 ;;		On entry : B00/0
+;;		On exit  : 0/0
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1   BANK3   BANK2
+;;      Params:         0       0       0       0       0
+;;      Locals:         0       0       0       0       0
+;;      Temps:          2       0       0       0       0
+;;      Totals:         2       0       0       0       0
+;;Total ram usage:        2 bytes
+;; Hardware stack levels required when called: 2
+;; This function calls:
+;;		_Toggle_Lock_State
+;; This function is called by:
+;;		Startup code after reset
+;; This function uses a non-reentrant model
+;;
+psect	maintext,global,class=CODE,delta=2,split=1,group=0
+	file	"./src/prueba.c"
+	line	59
+global __pmaintext
+__pmaintext:	;psect for function _main
+psect	maintext
+	file	"./src/prueba.c"
+	line	59
+	
+_main:	
+;incstack = 0
+	callstack 6
+; Regs used in _main: [wreg+status,2+status,0+pclath+cstack]
+	line	61
+	
+l613:	
+	bsf	status, 5	;RP0=1, select bank1
+	bcf	status, 6	;RP1=0, select bank1
+	bcf	(1082/8)^080h,(1082)&7	;volatile
+	line	62
+	bsf	(1072/8)^080h,(1072)&7	;volatile
+	line	63
+	bcf	(1088/8)^080h,(1088)&7	;volatile
+	line	64
+	bcf	(1089/8)^080h,(1089)&7	;volatile
+	line	66
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	bcf	(58/8),(58)&7	;volatile
+	line	67
+	bsf	(64/8),(64)&7	;volatile
+	line	68
+	bcf	(65/8),(65)&7	;volatile
+	line	70
+	
+l36:	
+	line	71
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	btfss	(48/8),(48)&7	;volatile
+	goto	u21
+	goto	u20
+u21:
+	goto	l36
+u20:
+	line	72
+	
+l615:	
+	fcall	_Toggle_Lock_State
+	line	73
+	
+l38:	
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	btfsc	(48/8),(48)&7	;volatile
+	goto	u31
+	goto	u30
+u31:
+	goto	l38
+u30:
+	line	74
+	
+l617:	
+	asmopt push
+asmopt off
+movlw	65
+movwf	((??_main+0)+0+1)
+	movlw	238
+movwf	((??_main+0)+0)
+	u47:
+decfsz	((??_main+0)+0),f
+	goto	u47
+	decfsz	((??_main+0)+0+1),f
+	goto	u47
+	nop
+asmopt pop
+
+	goto	l36
+	global	start
+	ljmp	start
+	callstack 0
+	line	77
+GLOBAL	__end_of_main
+	__end_of_main:
+	signat	_main,89
+	global	_Toggle_Lock_State
+
+;; *************** function _Toggle_Lock_State *****************
+;; Defined at:
+;;		line 43 in file "./src/prueba.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg, status,2, status,0, pclath, cstack
+;; Tracked objects:
+;;		On entry : 0/0
 ;;		On exit  : 0/0
 ;;		Unchanged: 0/0
 ;; Data sizes:     COMMON   BANK0   BANK1   BANK3   BANK2
@@ -480,63 +644,306 @@ __pcstackCOMMON:
 ;;      Temps:          0       0       0       0       0
 ;;      Totals:         0       0       0       0       0
 ;;Total ram usage:        0 bytes
+;; Hardware stack levels used: 1
+;; Hardware stack levels required when called: 1
+;; This function calls:
+;;		_Servo_MoveTo0
+;;		_Servo_MoveTo180
+;; This function is called by:
+;;		_main
+;; This function uses a non-reentrant model
+;;
+psect	text1,local,class=CODE,delta=2,merge=1,group=0
+	line	43
+global __ptext1
+__ptext1:	;psect for function _Toggle_Lock_State
+psect	text1
+	file	"./src/prueba.c"
+	line	43
+	
+_Toggle_Lock_State:	
+;incstack = 0
+	callstack 6
+; Regs used in _Toggle_Lock_State: [wreg+status,2+status,0+pclath+cstack]
+	line	44
+	
+l599:	
+	movf	((_currentState)),w
+	btfss	status,2
+	goto	u11
+	goto	u10
+u11:
+	goto	l605
+u10:
+	line	45
+	
+l601:	
+	movlw	01h
+	movwf	(_currentState)
+	line	46
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	bsf	(64/8),(64)&7	;volatile
+	line	47
+	bcf	(65/8),(65)&7	;volatile
+	line	48
+	
+l603:	
+	fcall	_Servo_MoveTo180
+	line	49
+	goto	l31
+	line	50
+	
+l605:	
+	clrf	(_currentState)
+	line	51
+	
+l607:	
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	bcf	(64/8),(64)&7	;volatile
+	line	52
+	
+l609:	
+	bsf	(65/8),(65)&7	;volatile
+	line	53
+	
+l611:	
+	fcall	_Servo_MoveTo0
+	line	55
+	
+l31:	
+	return
+	callstack 0
+GLOBAL	__end_of_Toggle_Lock_State
+	__end_of_Toggle_Lock_State:
+	signat	_Toggle_Lock_State,89
+	global	_Servo_MoveTo180
+
+;; *************** function _Servo_MoveTo180 *****************
+;; Defined at:
+;;		line 34 in file "./src/prueba.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg
+;; Tracked objects:
+;;		On entry : 0/0
+;;		On exit  : 0/0
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1   BANK3   BANK2
+;;      Params:         0       0       0       0       0
+;;      Locals:         0       0       0       0       0
+;;      Temps:          3       0       0       0       0
+;;      Totals:         3       0       0       0       0
+;;Total ram usage:        3 bytes
+;; Hardware stack levels used: 1
 ;; This function calls:
 ;;		Nothing
 ;; This function is called by:
-;;		Startup code after reset
+;;		_Toggle_Lock_State
 ;; This function uses a non-reentrant model
 ;;
-psect	maintext,global,class=CODE,delta=2,split=1,group=0
+psect	text2,local,class=CODE,delta=2,merge=1,group=0
+	line	34
+global __ptext2
+__ptext2:	;psect for function _Servo_MoveTo180
+psect	text2
 	file	"./src/prueba.c"
-	line	15
-global __pmaintext
-__pmaintext:	;psect for function _main
-psect	maintext
-	file	"./src/prueba.c"
-	line	15
+	line	34
 	
-_main:	
+_Servo_MoveTo180:	
 ;incstack = 0
-	callstack 8
-; Regs used in _main: [status,2]
-	line	16
+	callstack 6
+; Regs used in _Servo_MoveTo180: [wreg]
+	line	35
 	
-l558:	
-	bsf	status, 5	;RP0=1, select bank1
-	bcf	status, 6	;RP1=0, select bank1
-	clrf	(136)^080h	;volatile
-	line	17
+l593:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
-	clrf	(8)	;volatile
-	line	20
+	bsf	(58/8),(58)&7	;volatile
+	line	36
 	
-l560:	
-	movlw	06h
-	bsf	status, 5	;RP0=1, select bank1
-	bcf	status, 6	;RP1=0, select bank1
-	movwf	(159)^080h	;volatile
-	line	23
+l595:	
+	asmopt push
+asmopt off
+movlw	13
+movwf	((??_Servo_MoveTo180+0)+0+1)
+	movlw	251
+movwf	((??_Servo_MoveTo180+0)+0)
+	u57:
+decfsz	((??_Servo_MoveTo180+0)+0),f
+	goto	u57
+	decfsz	((??_Servo_MoveTo180+0)+0+1),f
+	goto	u57
+	nop2
+asmopt pop
+
+	line	37
 	
-l562:	
-	movlw	0FFh
+l597:	
 	bcf	status, 5	;RP0=0, select bank0
 	bcf	status, 6	;RP1=0, select bank0
-	movwf	(8)	;volatile
+	bcf	(58/8),(58)&7	;volatile
+	line	38
+	asmopt push
+asmopt off
+movlw	130
+movwf	((??_Servo_MoveTo180+0)+0+1)
+	movlw	221
+movwf	((??_Servo_MoveTo180+0)+0)
+	u67:
+decfsz	((??_Servo_MoveTo180+0)+0),f
+	goto	u67
+	decfsz	((??_Servo_MoveTo180+0)+0+1),f
+	goto	u67
+	nop2
+asmopt pop
+
+	line	39
+	asmopt push
+asmopt off
+movlw  26
+movwf	((??_Servo_MoveTo180+0)+0+2)
+movlw	94
+movwf	((??_Servo_MoveTo180+0)+0+1)
+	movlw	110
+movwf	((??_Servo_MoveTo180+0)+0)
+	u77:
+decfsz	((??_Servo_MoveTo180+0)+0),f
+	goto	u77
+	decfsz	((??_Servo_MoveTo180+0)+0+1),f
+	goto	u77
+	decfsz	((??_Servo_MoveTo180+0)+0+2),f
+	goto	u77
+	nop
+asmopt pop
+
+	line	40
+	
+l26:	
+	return
+	callstack 0
+GLOBAL	__end_of_Servo_MoveTo180
+	__end_of_Servo_MoveTo180:
+	signat	_Servo_MoveTo180,89
+	global	_Servo_MoveTo0
+
+;; *************** function _Servo_MoveTo0 *****************
+;; Defined at:
+;;		line 25 in file "./src/prueba.c"
+;; Parameters:    Size  Location     Type
+;;		None
+;; Auto vars:     Size  Location     Type
+;;		None
+;; Return value:  Size  Location     Type
+;;                  1    wreg      void 
+;; Registers used:
+;;		wreg
+;; Tracked objects:
+;;		On entry : 0/0
+;;		On exit  : 0/0
+;;		Unchanged: 0/0
+;; Data sizes:     COMMON   BANK0   BANK1   BANK3   BANK2
+;;      Params:         0       0       0       0       0
+;;      Locals:         0       0       0       0       0
+;;      Temps:          3       0       0       0       0
+;;      Totals:         3       0       0       0       0
+;;Total ram usage:        3 bytes
+;; Hardware stack levels used: 1
+;; This function calls:
+;;		Nothing
+;; This function is called by:
+;;		_Toggle_Lock_State
+;; This function uses a non-reentrant model
+;;
+psect	text3,local,class=CODE,delta=2,merge=1,group=0
+	line	25
+global __ptext3
+__ptext3:	;psect for function _Servo_MoveTo0
+psect	text3
+	file	"./src/prueba.c"
 	line	25
 	
-l11:	
+_Servo_MoveTo0:	
+;incstack = 0
+	callstack 6
+; Regs used in _Servo_MoveTo0: [wreg]
+	line	26
+	
+l587:	
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	bsf	(58/8),(58)&7	;volatile
 	line	27
 	
-l12:	
-	goto	l11
-	global	start
-	ljmp	start
-	callstack 0
+l589:	
+	asmopt push
+asmopt off
+movlw	4
+movwf	((??_Servo_MoveTo0+0)+0+1)
+	movlw	61
+movwf	((??_Servo_MoveTo0+0)+0)
+	u87:
+decfsz	((??_Servo_MoveTo0+0)+0),f
+	goto	u87
+	decfsz	((??_Servo_MoveTo0+0)+0+1),f
+	goto	u87
+	nop2
+asmopt pop
+
 	line	28
-GLOBAL	__end_of_main
-	__end_of_main:
-	signat	_main,89
+	
+l591:	
+	bcf	status, 5	;RP0=0, select bank0
+	bcf	status, 6	;RP1=0, select bank0
+	bcf	(58/8),(58)&7	;volatile
+	line	29
+	asmopt push
+asmopt off
+movlw	130
+movwf	((??_Servo_MoveTo0+0)+0+1)
+	movlw	221
+movwf	((??_Servo_MoveTo0+0)+0)
+	u97:
+decfsz	((??_Servo_MoveTo0+0)+0),f
+	goto	u97
+	decfsz	((??_Servo_MoveTo0+0)+0+1),f
+	goto	u97
+	nop2
+asmopt pop
+
+	line	30
+	asmopt push
+asmopt off
+movlw  26
+movwf	((??_Servo_MoveTo0+0)+0+2)
+movlw	94
+movwf	((??_Servo_MoveTo0+0)+0+1)
+	movlw	110
+movwf	((??_Servo_MoveTo0+0)+0)
+	u107:
+decfsz	((??_Servo_MoveTo0+0)+0),f
+	goto	u107
+	decfsz	((??_Servo_MoveTo0+0)+0+1),f
+	goto	u107
+	decfsz	((??_Servo_MoveTo0+0)+0+2),f
+	goto	u107
+	nop
+asmopt pop
+
+	line	31
+	
+l23:	
+	return
+	callstack 0
+GLOBAL	__end_of_Servo_MoveTo0
+	__end_of_Servo_MoveTo0:
+	signat	_Servo_MoveTo0,89
 global	___latbits
 ___latbits	equ	2
 	global	btemp

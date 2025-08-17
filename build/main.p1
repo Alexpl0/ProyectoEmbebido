@@ -1,0 +1,777 @@
+Version 4.0 HI-TECH Software Intermediate Code
+"25 ./src/main.c
+[c E1327 0 1 .. ]
+[n E1327 LockState CERRADO ABIERTO  ]
+"2982 C:\Program Files\Microchip\xc8\v3.00\pic\include\proc/pic16f877a.h
+[v _TRISC7 `Vb ~T0 @X0 0 e@1087 ]
+"2979
+[v _TRISC6 `Vb ~T0 @X0 0 e@1086 ]
+"2078
+[v _SPBRG `Vuc ~T0 @X0 0 e@153 ]
+"1997
+[v _TXSTA `Vuc ~T0 @X0 0 e@152 ]
+"962
+[v _RCSTA `Vuc ~T0 @X0 0 e@24 ]
+"3039
+[v _TXIF `Vb ~T0 @X0 0 e@100 ]
+"1057
+[v _TXREG `Vuc ~T0 @X0 0 e@25 ]
+"2227
+[v _ADCON1 `Vuc ~T0 @X0 0 e@159 ]
+"1157
+[v _ADCON0 `Vuc ~T0 @X0 0 e@31 ]
+"2919
+[v _TRISA0 `Vb ~T0 @X0 0 e@1064 ]
+[v F164 `(v ~T0 @X0 1 tf1`ul ]
+"20 C:\Program Files\Microchip\xc8\v3.00\pic\include/builtins.h
+[v __delay `JF164 ~T0 @X0 0 e ]
+[p i __delay ]
+"2580 C:\Program Files\Microchip\xc8\v3.00\pic\include\proc/pic16f877a.h
+[v _GO_nDONE `Vb ~T0 @X0 0 e@250 ]
+"1150
+[v _ADRESH `Vuc ~T0 @X0 0 e@30 ]
+"2220
+[v _ADRESL `Vuc ~T0 @X0 0 e@158 ]
+"2712
+[v _RC2 `Vb ~T0 @X0 0 e@58 ]
+"2937
+[v _TRISB0 `Vb ~T0 @X0 0 e@1072 ]
+"1259
+[s S55 :3 `uc 1 :1 `uc 1 :1 `uc 1 :1 `uc 1 :1 `uc 1 :1 `uc 1 ]
+[n S55 . PS PSA T0SE T0CS INTEDG nRBPU ]
+"1267
+[s S56 :1 `uc 1 :1 `uc 1 :1 `uc 1 ]
+[n S56 . PS0 PS1 PS2 ]
+"1258
+[u S54 `S55 1 `S56 1 ]
+[n S54 . . . ]
+"1273
+[v _OPTION_REGbits `VS54 ~T0 @X0 0 e@129 ]
+"2607
+[v _INTF `Vb ~T0 @X0 0 e@89 ]
+"2601
+[v _INTE `Vb ~T0 @X0 0 e@92 ]
+"2967
+[v _TRISC2 `Vb ~T0 @X0 0 e@1082 ]
+[t ~ __interrupt . k ]
+[t T1 __interrupt ]
+"2745
+[v _RCIF `Vb ~T0 @X0 0 e@101 ]
+"1064
+[v _RCREG `Vuc ~T0 @X0 0 e@26 ]
+[p mainexit ]
+"1373
+[v _TRISB `Vuc ~T0 @X0 0 e@134 ]
+"1497
+[v _TRISD `Vuc ~T0 @X0 0 e@136 ]
+"214
+[v _PORTB `Vuc ~T0 @X0 0 e@6 ]
+"338
+[v _PORTD `Vuc ~T0 @X0 0 e@8 ]
+"2742
+[v _RCIE `Vb ~T0 @X0 0 e@1125 ]
+"2631
+[v _PEIE `Vb ~T0 @X0 0 e@94 ]
+"2571
+[v _GIE `Vb ~T0 @X0 0 e@95 ]
+"2676
+[v _RB0 `Vb ~T0 @X0 0 e@48 ]
+"2751
+[v _RD0 `Vb ~T0 @X0 0 e@64 ]
+"2754
+[v _RD1 `Vb ~T0 @X0 0 e@65 ]
+"121 C:\Program Files\Microchip\xc8\v3.00\pic\include\c99/stdio.h
+[v _sprintf `(i ~T0 @X0 0 e1v`*uc`*Cuc ]
+"52 C:\Program Files\Microchip\xc8\v3.00\pic\include\proc/pic16f877a.h
+[; <" INDF equ 00h ;# ">
+"59
+[; <" TMR0 equ 01h ;# ">
+"66
+[; <" PCL equ 02h ;# ">
+"73
+[; <" STATUS equ 03h ;# ">
+"159
+[; <" FSR equ 04h ;# ">
+"166
+[; <" PORTA equ 05h ;# ">
+"216
+[; <" PORTB equ 06h ;# ">
+"278
+[; <" PORTC equ 07h ;# ">
+"340
+[; <" PORTD equ 08h ;# ">
+"402
+[; <" PORTE equ 09h ;# ">
+"434
+[; <" PCLATH equ 0Ah ;# ">
+"454
+[; <" INTCON equ 0Bh ;# ">
+"532
+[; <" PIR1 equ 0Ch ;# ">
+"594
+[; <" PIR2 equ 0Dh ;# ">
+"634
+[; <" TMR1 equ 0Eh ;# ">
+"641
+[; <" TMR1L equ 0Eh ;# ">
+"648
+[; <" TMR1H equ 0Fh ;# ">
+"655
+[; <" T1CON equ 010h ;# ">
+"730
+[; <" TMR2 equ 011h ;# ">
+"737
+[; <" T2CON equ 012h ;# ">
+"808
+[; <" SSPBUF equ 013h ;# ">
+"815
+[; <" SSPCON equ 014h ;# ">
+"885
+[; <" CCPR1 equ 015h ;# ">
+"892
+[; <" CCPR1L equ 015h ;# ">
+"899
+[; <" CCPR1H equ 016h ;# ">
+"906
+[; <" CCP1CON equ 017h ;# ">
+"964
+[; <" RCSTA equ 018h ;# ">
+"1059
+[; <" TXREG equ 019h ;# ">
+"1066
+[; <" RCREG equ 01Ah ;# ">
+"1073
+[; <" CCPR2 equ 01Bh ;# ">
+"1080
+[; <" CCPR2L equ 01Bh ;# ">
+"1087
+[; <" CCPR2H equ 01Ch ;# ">
+"1094
+[; <" CCP2CON equ 01Dh ;# ">
+"1152
+[; <" ADRESH equ 01Eh ;# ">
+"1159
+[; <" ADCON0 equ 01Fh ;# ">
+"1255
+[; <" OPTION_REG equ 081h ;# ">
+"1325
+[; <" TRISA equ 085h ;# ">
+"1375
+[; <" TRISB equ 086h ;# ">
+"1437
+[; <" TRISC equ 087h ;# ">
+"1499
+[; <" TRISD equ 088h ;# ">
+"1561
+[; <" TRISE equ 089h ;# ">
+"1618
+[; <" PIE1 equ 08Ch ;# ">
+"1680
+[; <" PIE2 equ 08Dh ;# ">
+"1720
+[; <" PCON equ 08Eh ;# ">
+"1754
+[; <" SSPCON2 equ 091h ;# ">
+"1816
+[; <" PR2 equ 092h ;# ">
+"1823
+[; <" SSPADD equ 093h ;# ">
+"1830
+[; <" SSPSTAT equ 094h ;# ">
+"1999
+[; <" TXSTA equ 098h ;# ">
+"2080
+[; <" SPBRG equ 099h ;# ">
+"2087
+[; <" CMCON equ 09Ch ;# ">
+"2157
+[; <" CVRCON equ 09Dh ;# ">
+"2222
+[; <" ADRESL equ 09Eh ;# ">
+"2229
+[; <" ADCON1 equ 09Fh ;# ">
+"2288
+[; <" EEDATA equ 010Ch ;# ">
+"2295
+[; <" EEADR equ 010Dh ;# ">
+"2302
+[; <" EEDATH equ 010Eh ;# ">
+"2309
+[; <" EEADRH equ 010Fh ;# ">
+"2316
+[; <" EECON1 equ 018Ch ;# ">
+"2361
+[; <" EECON2 equ 018Dh ;# ">
+"4 ./src/main.c
+[p x FOSC  =  HS ]
+"5
+[p x WDTE  =  OFF ]
+"6
+[p x PWRTE  =  ON ]
+"7
+[p x BOREN  =  ON ]
+"8
+[p x LVP  =  OFF ]
+"9
+[p x CPD  =  OFF ]
+"10
+[p x WRT  =  OFF ]
+"11
+[p x CP  =  OFF ]
+"25
+[v _currentState `E1327 ~T0 @X0 1 e ]
+[i _currentState
+. `E1327 0
+]
+"28
+[v _temperature `Vf ~T0 @X0 1 e ]
+[i _temperature
+-> .0.0 `f
+]
+"29
+[v _bluetoothData `Vuc ~T0 @X0 1 e ]
+[i _bluetoothData
+-> -> 0 `i `uc
+]
+"30
+[v _fireAlarm `Vuc ~T0 @X0 1 e ]
+[i _fireAlarm
+-> -> 0 `i `uc
+]
+"31
+[v _ledBlinkCounter `Vuc ~T0 @X0 1 e ]
+[i _ledBlinkCounter
+-> -> 0 `i `uc
+]
+"34
+[v _servo_needs_update `Vuc ~T0 @X0 1 e ]
+[i _servo_needs_update
+-> -> 1 `i `uc
+]
+"37
+[v _UART_Init `(v ~T0 @X0 1 ef ]
+{
+[e :U _UART_Init ]
+[f ]
+"38
+[e = _TRISC7 -> -> 1 `i `b ]
+"39
+[e = _TRISC6 -> -> 0 `i `b ]
+"41
+[e = _SPBRG -> -> 31 `i `uc ]
+"42
+[e = _TXSTA -> -> 36 `i `uc ]
+"43
+[e = _RCSTA -> -> 144 `i `uc ]
+"44
+[e :UE 101 ]
+}
+"47
+[v _UART_Write `(v ~T0 @X0 1 ef1`uc ]
+{
+[e :U _UART_Write ]
+[v _data `uc ~T0 @X0 1 r1 ]
+[f ]
+"48
+[e $U 103  ]
+[e :U 104 ]
+[e :U 103 ]
+[e $ ! _TXIF 104  ]
+[e :U 105 ]
+"49
+[e = _TXREG -> _data `uc ]
+"50
+[e :UE 102 ]
+}
+"53
+[v _UART_Write_String `(v ~T0 @X0 1 ef1`*Cuc ]
+{
+[e :U _UART_Write_String ]
+[v _str `*Cuc ~T0 @X0 1 r1 ]
+[f ]
+"54
+[e $U 107  ]
+[e :U 108 ]
+{
+"55
+[e ( _UART_Write (1 *U ++ _str * -> -> 1 `i `x -> -> # *U _str `i `x ]
+"56
+}
+[e :U 107 ]
+"54
+[e $ != -> *U _str `i -> 0 `i 108  ]
+[e :U 109 ]
+"57
+[e :UE 106 ]
+}
+"60
+[v _ADC_Init `(v ~T0 @X0 1 ef ]
+{
+[e :U _ADC_Init ]
+[f ]
+"61
+[e = _ADCON1 -> -> 142 `i `uc ]
+"62
+[e = _ADCON0 -> -> 65 `i `uc ]
+"63
+[e = _TRISA0 -> -> 1 `i `b ]
+"64
+[e :UE 110 ]
+}
+"67
+[v _Read_Temperature `(f ~T0 @X0 1 ef ]
+{
+[e :U _Read_Temperature ]
+[f ]
+"68
+[e ( __delay (1 -> * -> -> 2 `i `d / -> -> 20000000 `l `d .4000.0 `ul ]
+"69
+[e = _GO_nDONE -> -> 1 `i `b ]
+"70
+[e $U 112  ]
+[e :U 113 ]
+[e :U 112 ]
+[e $ _GO_nDONE 113  ]
+[e :U 114 ]
+"73
+[v _adcValue `i ~T0 @X0 1 a ]
+[e = _adcValue + << -> _ADRESH `i -> 8 `i -> _ADRESL `i ]
+"76
+[e ) -> / * * -> _adcValue `d .5.0 .100.0 .1024.0 `f ]
+[e $UE 111  ]
+"77
+[e :UE 111 ]
+}
+"81
+[v _Servo_MoveTo0 `(v ~T0 @X0 1 ef ]
+{
+[e :U _Servo_MoveTo0 ]
+[f ]
+"82
+{
+[v _i `i ~T0 @X0 1 a ]
+[e = _i -> 0 `i ]
+[e $ < _i -> 20 `i 116  ]
+[e $U 117  ]
+[e :U 116 ]
+{
+"83
+[e = _RC2 -> -> 1 `i `b ]
+"84
+[e ( __delay (1 -> * -> -> 500 `i `d / -> -> 20000000 `l `d .4000000.0 `ul ]
+"85
+[e = _RC2 -> -> 0 `i `b ]
+"86
+[e ( __delay (1 -> * -> -> 20 `i `d / -> -> 20000000 `l `d .4000.0 `ul ]
+"87
+}
+[e ++ _i -> 1 `i ]
+[e $ < _i -> 20 `i 116  ]
+[e :U 117 ]
+}
+"88
+[e :UE 115 ]
+}
+"91
+[v _Servo_MoveTo180 `(v ~T0 @X0 1 ef ]
+{
+[e :U _Servo_MoveTo180 ]
+[f ]
+"92
+{
+[v _i `i ~T0 @X0 1 a ]
+[e = _i -> 0 `i ]
+[e $ < _i -> 20 `i 120  ]
+[e $U 121  ]
+[e :U 120 ]
+{
+"93
+[e = _RC2 -> -> 1 `i `b ]
+"94
+[e ( __delay (1 -> * -> -> 2000 `i `d / -> -> 20000000 `l `d .4000000.0 `ul ]
+"95
+[e = _RC2 -> -> 0 `i `b ]
+"96
+[e ( __delay (1 -> * -> -> 20 `i `d / -> -> 20000000 `l `d .4000.0 `ul ]
+"97
+}
+[e ++ _i -> 1 `i ]
+[e $ < _i -> 20 `i 120  ]
+[e :U 121 ]
+}
+"98
+[e :UE 119 ]
+}
+"101
+[v _Move_Servo `(v ~T0 @X0 1 ef1`E1327 ]
+{
+[e :U _Move_Servo ]
+[v _state `E1327 ~T0 @X0 1 r1 ]
+[f ]
+"102
+[e $ ! == -> _state `ui -> . `E1327 1 `ui 124  ]
+{
+"103
+[e ( _Servo_MoveTo180 ..  ]
+"104
+}
+[e $U 125  ]
+[e :U 124 ]
+{
+"105
+[e ( _Servo_MoveTo0 ..  ]
+"106
+}
+[e :U 125 ]
+"107
+[e :UE 123 ]
+}
+"110
+[v _Button_Init `(v ~T0 @X0 1 ef ]
+{
+[e :U _Button_Init ]
+[f ]
+"111
+[e = _TRISB0 -> -> 1 `i `b ]
+"114
+[e = . . _OPTION_REGbits 0 4 -> -> 1 `i `uc ]
+"115
+[e = _INTF -> -> 0 `i `b ]
+"116
+[e = _INTE -> -> 1 `i `b ]
+"117
+[e :UE 126 ]
+}
+"120
+[v _Servo_Init `(v ~T0 @X0 1 ef ]
+{
+[e :U _Servo_Init ]
+[f ]
+"121
+[e = _TRISC2 -> -> 0 `i `b ]
+"122
+[e = _RC2 -> -> 0 `i `b ]
+"123
+[e :UE 127 ]
+}
+"126
+[v _Toggle_Lock_State `(v ~T0 @X0 1 ef ]
+{
+[e :U _Toggle_Lock_State ]
+[f ]
+"127
+[e $ ! == -> _currentState `ui -> . `E1327 0 `ui 129  ]
+{
+"128
+[e = _currentState . `E1327 1 ]
+"129
+[e = _servo_needs_update -> -> 1 `i `uc ]
+"130
+}
+[e $U 130  ]
+[e :U 129 ]
+{
+"131
+[e = _currentState . `E1327 0 ]
+"132
+[e = _servo_needs_update -> -> 1 `i `uc ]
+"133
+}
+[e :U 130 ]
+"134
+[e :UE 128 ]
+}
+"137
+[v _Check_Temperature_Alarm `(v ~T0 @X0 1 ef ]
+{
+[e :U _Check_Temperature_Alarm ]
+[f ]
+"138
+[e $ ! > -> _temperature `d .50.0 132  ]
+{
+"139
+[e = _fireAlarm -> -> 1 `i `uc ]
+"140
+}
+[e $U 133  ]
+[e :U 132 ]
+{
+"141
+[e = _fireAlarm -> -> 0 `i `uc ]
+"142
+}
+[e :U 133 ]
+"143
+[e :UE 131 ]
+}
+[v $root$_ISR `(v ~T0 @X0 0 e ]
+"146
+[v _ISR `(v ~T1 @X0 1 ef ]
+{
+[e :U _ISR ]
+[f ]
+"148
+[e $ ! _RCIF 135  ]
+{
+"149
+[e = _bluetoothData _RCREG ]
+"152
+[e $ ! || == -> _bluetoothData `ui -> 65 `ui == -> _bluetoothData `ui -> 97 `ui 136  ]
+{
+"153
+[e = _currentState . `E1327 1 ]
+"154
+[e = _servo_needs_update -> -> 1 `i `uc ]
+"155
+[e ( _UART_Write_String (1 :s 1C ]
+"156
+}
+[e $U 137  ]
+[e :U 136 ]
+[e $ ! || == -> _bluetoothData `ui -> 67 `ui == -> _bluetoothData `ui -> 99 `ui 138  ]
+{
+"157
+[e = _currentState . `E1327 0 ]
+"158
+[e = _servo_needs_update -> -> 1 `i `uc ]
+"159
+[e ( _UART_Write_String (1 :s 2C ]
+"160
+}
+[e :U 138 ]
+[e :U 137 ]
+"161
+}
+[e :U 135 ]
+"164
+[e $ ! _INTF 139  ]
+{
+"165
+[e = _INTF -> -> 0 `i `b ]
+"168
+[e = _servo_needs_update -> -> 1 `i `uc ]
+"169
+}
+[e :U 139 ]
+"170
+[e :UE 134 ]
+}
+[v $root$_main `(v ~T0 @X0 0 e ]
+"173
+[v _main `(v ~T0 @X0 1 ef ]
+{
+[e :U _main ]
+[f ]
+"177
+[e = _TRISB -> -> 1 `i `uc ]
+"178
+[e = _TRISD -> -> 0 `i `uc ]
+"179
+[e = _PORTB -> -> 0 `i `uc ]
+"180
+[e = _PORTD -> -> 0 `i `uc ]
+"183
+[e ( _Servo_Init ..  ]
+"184
+[e ( _ADC_Init ..  ]
+"185
+[e ( _UART_Init ..  ]
+"186
+[e ( _Button_Init ..  ]
+"189
+[e = _RCIE -> -> 1 `i `b ]
+"190
+[e = _INTE -> -> 1 `i `b ]
+"191
+[e = _PEIE -> -> 1 `i `b ]
+"192
+[e = _GIE -> -> 1 `i `b ]
+"195
+[e = _currentState . `E1327 0 ]
+"196
+[e ( _Move_Servo (1 _currentState ]
+"199
+[e ( _UART_Write_String (1 :s 3C ]
+"200
+[e ( _UART_Write_String (1 :s 4C ]
+"201
+[e ( _UART_Write_String (1 :s 5C ]
+"204
+[v _temp_counter `ui ~T0 @X0 1 a ]
+[e = _temp_counter -> -> 0 `i `ui ]
+"205
+[v _bt_counter `ui ~T0 @X0 1 a ]
+[e = _bt_counter -> -> 0 `i `ui ]
+"206
+[v _button_pressed `uc ~T0 @X0 1 a ]
+[e = _button_pressed -> -> 0 `i `uc ]
+"209
+[e :U 142 ]
+{
+"211
+[e $ ! && _INTF ! != -> _button_pressed `i -> 0 `i 144  ]
+{
+"212
+[e ( __delay (1 -> * -> -> 50 `i `d / -> -> 20000000 `l `d .4000.0 `ul ]
+"213
+[e $ ! == -> _RB0 `i -> 1 `i 145  ]
+{
+"214
+[e ( _Toggle_Lock_State ..  ]
+"215
+[e ( _UART_Write_String (1 :s 6C ]
+"216
+[e = _button_pressed -> -> 1 `i `uc ]
+"219
+[e $U 146  ]
+[e :U 147 ]
+{
+"220
+[e ( __delay (1 -> * -> -> 10 `i `d / -> -> 20000000 `l `d .4000.0 `ul ]
+"221
+}
+[e :U 146 ]
+"219
+[e $ == -> _RB0 `i -> 1 `i 147  ]
+[e :U 148 ]
+"222
+[e ( __delay (1 -> * -> -> 50 `i `d / -> -> 20000000 `l `d .4000.0 `ul ]
+"223
+}
+[e :U 145 ]
+"224
+[e = _INTF -> -> 0 `i `b ]
+"225
+}
+[e :U 144 ]
+"227
+[e $ ! == -> _RB0 `i -> 0 `i 149  ]
+{
+"228
+[e = _button_pressed -> -> 0 `i `uc ]
+"229
+}
+[e :U 149 ]
+"232
+[e $ ! != -> _servo_needs_update `i -> 0 `i 150  ]
+{
+"233
+[e ( _Move_Servo (1 _currentState ]
+"234
+[e = _servo_needs_update -> -> 0 `i `uc ]
+"235
+}
+[e :U 150 ]
+"238
+[e ++ _temp_counter -> -> 1 `i `ui ]
+"239
+[e $ ! >= _temp_counter -> -> 1000 `i `ui 151  ]
+{
+"240
+[e = _temperature ( _Read_Temperature ..  ]
+"241
+[e ( _Check_Temperature_Alarm ..  ]
+"242
+[e = _temp_counter -> -> 0 `i `ui ]
+"243
+}
+[e :U 151 ]
+"246
+[e $ ! != -> _fireAlarm `i -> 0 `i 152  ]
+{
+"248
+[e = _RD0 -> -> 0 `i `b ]
+"249
+[e ++ _ledBlinkCounter -> -> 1 `i `Vuc ]
+"250
+[e $ ! > -> _ledBlinkCounter `i -> 100 `i 153  ]
+{
+"251
+[e = _RD1 ! _RD1 ]
+"252
+[e = _ledBlinkCounter -> -> 0 `i `uc ]
+"253
+}
+[e :U 153 ]
+"254
+}
+[e $U 154  ]
+[e :U 152 ]
+{
+"256
+[e = _RD0 == -> _currentState `ui -> . `E1327 1 `ui ]
+"257
+[e = _RD1 == -> _currentState `ui -> . `E1327 0 `ui ]
+"258
+[e = _ledBlinkCounter -> -> 0 `i `uc ]
+"259
+}
+[e :U 154 ]
+"262
+[e ++ _bt_counter -> -> 1 `i `ui ]
+"263
+[e $ ! >= _bt_counter -> -> 500 `i `ui 155  ]
+{
+"265
+[e $ ! == -> _currentState `ui -> . `E1327 1 `ui 156  ]
+{
+"266
+[e ( _UART_Write_String (1 :s 7C ]
+"267
+}
+[e $U 157  ]
+[e :U 156 ]
+{
+"268
+[e ( _UART_Write_String (1 :s 8C ]
+"269
+}
+[e :U 157 ]
+"272
+[v _tempStr `uc ~T0 @X0 -> 20 `i a ]
+"273
+[e ( _sprintf (1 , (. , &U _tempStr :s 9C -> _temperature `d ]
+"274
+[e ( _UART_Write_String (1 -> &U _tempStr `*Cuc ]
+"277
+[e $ ! != -> _fireAlarm `i -> 0 `i 158  ]
+{
+"278
+[e ( _UART_Write_String (1 :s 10C ]
+"279
+}
+[e $U 159  ]
+[e :U 158 ]
+{
+"280
+[e ( _UART_Write_String (1 :s 11C ]
+"281
+}
+[e :U 159 ]
+"283
+[e = _bt_counter -> -> 0 `i `ui ]
+"284
+}
+[e :U 155 ]
+"287
+[e ( __delay (1 -> * -> -> 1 `i `d / -> -> 20000000 `l `d .4000.0 `ul ]
+"288
+}
+[e :U 141 ]
+[e $U 142  ]
+[e :U 143 ]
+"289
+[e :UE 140 ]
+}
+[p f _sprintf 8462336 ]
+[a 5C 67 111 109 97 110 100 111 115 58 32 65 61 65 98 114 105 114 44 32 67 61 67 101 114 114 97 114 10 0 ]
+[a 6C 66 111 116 111 110 32 112 114 101 115 105 111 110 97 100 111 10 0 ]
+[a 9C 84 58 37 46 49 102 10 0 ]
+[a 4C 83 101 114 118 111 32 102 117 110 99 105 111 110 97 110 100 111 32 99 111 114 114 101 99 116 97 109 101 110 116 101 10 0 ]
+[a 1C 67 111 109 97 110 100 111 58 32 65 66 82 73 82 10 0 ]
+[a 2C 67 111 109 97 110 100 111 58 32 67 69 82 82 65 82 10 0 ]
+[a 8C 83 58 67 10 0 ]
+[a 7C 83 58 65 10 0 ]
+[a 3C 61 61 61 32 83 73 83 84 69 77 65 32 73 78 73 67 73 65 68 79 32 61 61 61 10 0 ]
+[a 10C 70 58 49 10 0 ]
+[a 11C 70 58 48 10 0 ]

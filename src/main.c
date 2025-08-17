@@ -1,285 +1,475 @@
+/*
+ * CERRADURA ELECTRÓNICA INTELIGENTE CON MONITOREO DE TEMPERATURA
+ * Microcontrolador: PIC16F877A
+ * Frecuencia: 20MHz
+ * Compilador: XC8
+ * 
+ * Autores: 
+ * - Jesús Alejandro Pérez López
+ * - Iber Armando Silva González  
+ * - Yusmany José David Rejopachi Sandoval
+ * 
+ * Universidad Cuauhtémoc Querétaro
+ * Agosto 2025
+ */
+
 #include <xc.h>
-#include <stdio.h>
 #include <string.h>
 
-// Configuración de bits del PIC16F877A
-#pragma config FOSC = HS        // Oscilador de cristal de alta velocidad
-#pragma config WDTE = OFF       // Watchdog Timer desactivado
-#pragma config PWRTE = ON       // Power-up Timer activado
-#pragma config BOREN = ON       // Brown-out Reset activado
-#pragma config LVP = OFF        // Low Voltage Programming desactivado
-#pragma config CPD = OFF        // Data EEPROM Protection desactivado
-#pragma config WRT = OFF        // Flash Program Memory Write desactivado
-#pragma config CP = OFF         // Flash Program Memory Code Protection desactivado
+/*
+ * ===============================================================================
+ * SECCIÓN 1: CONFIGURACIÓN DEL MICROCONTROLADOR
+ * ===============================================================================
+ * Esta sección define los bits de configuración del PIC16F877A que determinan
+ * el comportamiento básico del sistema al encenderse.
+ */
 
-#define _XTAL_FREQ 20000000     // Frecuencia del oscilador (20MHz)
+// Configuración del oscilador - Cristal externo de alta velocidad (20MHz)
+#pragma config FOSC = HS        
 
-// Definición de pines
-#define LED_ABIERTO    RD0      // LED Verde - Estado Abierto
-#define LED_CERRADO    RD1      // LED Rojo - Estado Cerrado/Alarma
-#define SERVO_PWM      RC2      // Pin PWM para servomotor
-#define BOTON_MANUAL   RB0      // Botón para control manual
+// Deshabilitación del Watchdog Timer - Evita resets automáticos
+#pragma config WDTE = OFF       
 
-// Umbral de temperatura para alarma (en °C)
-#define TEMP_ALARM_THRESHOLD 50.0
+// Habilitación del Power-up Timer - Estabiliza el arranque
+#pragma config PWRTE = ON       
 
-// Estados de la cerradura
-enum LockState {CERRADO, ABIERTO} currentState = CERRADO;
+// Habilitación del Brown-out Reset - Protege contra caídas de voltaje
+#pragma config BOREN = ON       
 
-// Variables globales
-volatile float temperature = 0.0;
-volatile unsigned char bluetoothData = 0;
-volatile unsigned char fireAlarm = 0;
-volatile unsigned char ledBlinkCounter = 0;
+// Deshabilitación de programación de bajo voltaje - Evita programación accidental
+#pragma config LVP = OFF        
 
-// Variables para PWM por software
-volatile unsigned int servo_pulse_width = 1000; // Ancho del pulso en microsegundos
-volatile unsigned char pwm_counter = 0;
-volatile unsigned char generate_pwm = 1;
+// Deshabilitación de protección de datos EEPROM
+#pragma config CPD = OFF        
 
-// Configuración UART para Bluetooth
+// Deshabilitación de protección de escritura de memoria
+#pragma config WRT = OFF        
+
+// Deshabilitación de protección de código
+#pragma config CP = OFF         
+
+// Definición de frecuencia para funciones de delay
+#define _XTAL_FREQ 20000000
+
+/*
+ * ===============================================================================
+ * SECCIÓN 2: DEFINICIONES DE HARDWARE Y CONSTANTES
+ * ===============================================================================
+ * Aquí se definen todos los pines utilizados y las constantes del sistema
+ */
+
+// Definiciones de pines - Mapeo de hardware
+#define SERVO_PIN RC2           // Pin de control PWM para servomotor
+#define BOTON_MANUAL RB0        // Pin de entrada para botón manual
+#define LED_ABIERTO RD0         // LED verde - indica cerradura abierta
+#define LED_CERRADO RD1         // LED rojo - indica cerradura cerrada
+#define SENSOR_TEMP RA0         // Pin analógico para sensor LM35
+
+// Definiciones de estados del sistema
+enum LockState {
+    CERRADO = 0,                // Estado: cerradura cerrada
+    ABIERTO = 1                 // Estado: cerradura abierta
+};
+
+// Variable global de estado actual
+enum LockState currentState = CERRADO;
+
+// Constantes de configuración
+#define TEMP_ALARM_THRESHOLD 50.0f  // Umbral de temperatura para alarma (°C)
+#define UART_BAUD_9600 129         // Valor SPBRG para 9600 baudios a 20MHz
+#define ADC_RESOLUTION 1024        // Resolución del ADC de 10 bits
+#define ADC_VREF 5.0f             // Voltaje de referencia del ADC
+
+/*
+ * ===============================================================================
+ * SECCIÓN 3: MÓDULO DE COMUNICACIÓN UART
+ * ===============================================================================
+ * Funciones para comunicación serie con el módulo Bluetooth HC-05
+ * Configurado para 9600 baudios, 8 bits de datos, 1 bit de parada, sin paridad
+ */
+
+/**
+ * @brief Inicializa el módulo UART para comunicación Bluetooth
+ * Configura los registros necesarios para comunicación serie a 9600 baudios
+ */
 void UART_Init() {
-    TRISC7 = 1;     // RX como entrada (Pin 26)
-    TRISC6 = 0;     // TX como salida (Pin 25)
+    // Configuración de velocidad alta para mayor precisión
+    TXSTAbits.BRGH = 1;         // High speed baud rate
+    SPBRG = UART_BAUD_9600;     // Valor para 9600 baudios
     
-    SPBRG = 25;     // Baud rate 9600 para 4MHz
-    TXSTA = 0x24;   // TXEN=1, BRGH=1, 8-bit, Asíncrono
-    RCSTA = 0x90;   // SPEN=1, CREN=1, Recepción continua habilitada
+    // Habilitación del puerto serie
+    RCSTAbits.SPEN = 1;         // Serial port enable
+    TXSTAbits.SYNC = 0;         // Modo asíncrono
+    TXSTAbits.TXEN = 1;         // Habilitar transmisión
+    RCSTAbits.CREN = 1;         // Habilitar recepción continua
+    
+    // Configuración de pines como entrada/salida
+    TRISC6 = 0;                 // TX como salida
+    TRISC7 = 1;                 // RX como entrada
 }
 
-// Enviar un carácter por UART
+/**
+ * @brief Transmite un carácter por UART
+ * @param data: Carácter a transmitir
+ */
 void UART_Write(char data) {
-    while(!TXIF);   // Esperar hasta que buffer esté libre
-    TXREG = data;
+    while(!TXSTAbits.TRMT);     // Esperar hasta que el buffer esté vacío
+    TXREG = data;               // Cargar dato en registro de transmisión
 }
 
-// Enviar cadena de caracteres por UART
-void UART_Write_String(const char* str) {
-    while(*str) {
-        UART_Write(*str++);
+/**
+ * @brief Transmite una cadena de caracteres por UART
+ * @param text: Puntero a la cadena a transmitir
+ */
+void UART_Write_Text(const char *text) {
+    while(*text) {
+        UART_Write(*text++);    // Transmitir carácter por carácter
     }
 }
 
-// Configuración ADC para sensor LM35
+/**
+ * @brief Lee un carácter del buffer de recepción UART
+ * @return Carácter recibido o 0 si no hay datos
+ */
+char UART_Read() {
+    if(PIR1bits.RCIF) {         // Si hay datos en el buffer
+        return RCREG;           // Retornar dato recibido
+    }
+    return 0;                   // No hay datos disponibles
+}
+
+/**
+ * @brief Verifica si hay datos disponibles en el buffer UART
+ * @return 1 si hay datos, 0 si no hay datos
+ */
+char UART_Data_Ready() {
+    return PIR1bits.RCIF;       // Retorna estado del flag de recepción
+}
+
+/**
+ * @brief Maneja errores de comunicación UART
+ * Detecta y corrige errores de overflow en la recepción
+ */
+void UART_Check_Errors() {
+    if(RCSTAbits.OERR) {        // Si hay error de overflow
+        RCSTAbits.CREN = 0;     // Deshabilitar recepción
+        RCSTAbits.CREN = 1;     // Rehabilitar recepción para limpiar error
+    }
+}
+
+/*
+ * ===============================================================================
+ * SECCIÓN 4: MÓDULO ADC PARA SENSOR DE TEMPERATURA
+ * ===============================================================================
+ * Funciones para conversión analógico-digital del sensor LM35
+ * El LM35 entrega 10mV por cada grado Celsius
+ */
+
+/**
+ * @brief Inicializa el conversor ADC
+ * Configura el ADC para leer el sensor de temperatura en RA0
+ */
 void ADC_Init() {
-    ADCON1 = 0x8E;   // Justificado derecha, solo AN0 como analógico, Vref=Vdd
-    ADCON0 = 0x41;   // Canal AN0, ADC encendido, Fosc/8
-    TRISA0 = 1;      // RA0 como entrada analógica
+    ADCON0 = 0x41;              // Canal 0 seleccionado, ADC encendido
+    ADCON1 = 0x80;              // Justificación derecha, Vref = Vdd
+    TRISA0 = 1;                 // RA0 configurado como entrada analógica
 }
 
-// Leer temperatura del LM35
-float Read_Temperature() {
-    __delay_ms(2);          // Tiempo de adquisición
-    GO_nDONE = 1;           // Iniciar conversión ADC
-    while(GO_nDONE);        // Esperar fin de conversión
+/**
+ * @brief Realiza una conversión ADC
+ * @return Valor digital de 10 bits (0-1023)
+ */
+unsigned int ADC_Read() {
+    __delay_ms(2);              // Tiempo de estabilización del canal
+    GO_nDONE = 1;              // Iniciar conversión
+    while(GO_nDONE);           // Esperar fin de conversión
     
-    // Leer valor ADC de 10 bits
-    int adcValue = (ADRESH << 8) + ADRESL;
+    // Combinar los 8 bits altos y 2 bits bajos del resultado
+    return ((unsigned int)ADRESH << 8) | (unsigned int)ADRESL;
+}
+
+/**
+ * @brief Convierte lectura ADC a temperatura en grados Celsius
+ * @return Temperatura en grados Celsius
+ * 
+ * Cálculo: 
+ * - Resolución ADC: 5V/1024 = 4.88mV por bit
+ * - LM35: 10mV/°C
+ * - Factor de conversión: (4.88mV/bit) / (10mV/°C) = 0.488°C/bit
+ */
+float LeerTemperaturaLM35() {
+    unsigned int adc_value = ADC_Read();
     
-    // Convertir a temperatura: LM35 = 10mV/°C
-    return (adcValue * 5.0 * 100.0) / 1024.0;
-}
-
-// Timer1 para PWM por software - CONFIGURACIÓN CORREGIDA
-void Timer1_Init() {
-    T1CON = 0x21;     // Timer1 ON, Prescaler 1:4, oscilador interno
-    TMR1H = 0;        // Limpiar Timer1
-    TMR1L = 0;
-    TMR1IF = 0;       // Limpiar bandera
-    TMR1IE = 1;       // Habilitar interrupción Timer1
-}
-
-// Generar PWM por software para el servo
-void Generate_Servo_PWM() {
-    if(generate_pwm) {
-        // Generar pulso
-        SERVO_PWM = 1;                              // Pin alto
-        __delay_us(servo_pulse_width);              // Mantener por tiempo especificado
-        SERVO_PWM = 0;                              // Pin bajo
-        
-        // Completar período de 20ms
-        unsigned int remaining_time = 20000 - servo_pulse_width;
-        
-        // Dividir el delay largo en chunks más pequeños para no bloquear
-        while(remaining_time > 1000) {
-            __delay_us(1000);
-            remaining_time -= 1000;
-        }
-        if(remaining_time > 0) {
-            __delay_us(remaining_time);
-        }
-    }
-}
-
-// Configurar posición del servomotor
-void Move_Servo(enum LockState state) {
-    if(state == ABIERTO) {
-        servo_pulse_width = 1500;  // 1.5ms = 90 grados
-    } else {
-        servo_pulse_width = 1000;  // 1ms = 0 grados
-    }
-}
-
-// Configuración del botón CORREGIDA
-void Button_Init() {
-    TRISB0 = 1;         // RB0 como entrada
+    // Conversión directa: valor_ADC * (5V/1024) * (100°C/V) / 10
+    float temp = (adc_value * 4.88f) / 10.0f;
     
-    // Configurar interrupción externa
-    OPTION_REGbits.INTEDG = 1;  // Flanco ascendente
-    INTF = 0;           // Limpiar bandera
-    INTE = 1;           // Habilitar interrupción externa
+    return temp;
 }
 
-// Inicializar puerto del servo
-void Servo_Init() {
-    TRISC2 = 0;         // RC2 como salida
-    SERVO_PWM = 0;      // Inicializar en bajo
+/*
+ * ===============================================================================
+ * SECCIÓN 5: CONTROL DEL SERVOMOTOR
+ * ===============================================================================
+ * Funciones para generar señales PWM que controlan la posición del servomotor SG90
+ * El servo requiere pulsos de 1ms (0°) a 2ms (180°) cada 20ms
+ */
+
+/**
+ * @brief Mueve el servo a la posición 0 grados (cerradura cerrada)
+ * Genera un pulso de aproximadamente 0.5ms para posición cerrada
+ */
+void Servo_MoveTo0() {
+    SERVO_PIN = 1;              // Inicio del pulso
+    __delay_us(500);            // Duración del pulso para 0 grados
+    SERVO_PIN = 0;              // Fin del pulso
+    __delay_ms(20);             // Período completo de 20ms
 }
 
-// Alternar estado de la cerradura
+/**
+ * @brief Mueve el servo a la posición 180 grados (cerradura abierta)
+ * Genera un pulso de aproximadamente 2ms para posición abierta
+ */
+void Servo_MoveTo180() {
+    SERVO_PIN = 1;              // Inicio del pulso
+    __delay_us(2000);           // Duración del pulso para 180 grados
+    SERVO_PIN = 0;              // Fin del pulso
+    __delay_ms(20);             // Período completo de 20ms
+}
+
+/*
+ * ===============================================================================
+ * SECCIÓN 6: LÓGICA DE CONTROL DE CERRADURA
+ * ===============================================================================
+ * Funciones de alto nivel que coordinan el movimiento del servo y los LEDs
+ */
+
+/**
+ * @brief Abre la cerradura
+ * Cambia el estado a ABIERTO, enciende LED verde y mueve servo
+ */
+void AbrirCerradura() {
+    currentState = ABIERTO;     // Actualizar estado del sistema
+    LED_ABIERTO = 1;            // Encender LED verde
+    LED_CERRADO = 0;            // Apagar LED rojo
+    Servo_MoveTo180();          // Mover servo a posición abierta
+    
+    // Confirmar acción por UART
+    UART_Write_Text("CERRADURA ABIERTA\n");
+}
+
+/**
+ * @brief Cierra la cerradura
+ * Cambia el estado a CERRADO, enciende LED rojo y mueve servo
+ */
+void CerrarCerradura() {
+    currentState = CERRADO;     // Actualizar estado del sistema
+    LED_ABIERTO = 0;            // Apagar LED verde
+    LED_CERRADO = 1;            // Encender LED rojo
+    Servo_MoveTo0();            // Mover servo a posición cerrada
+    
+    // Confirmar acción por UART
+    UART_Write_Text("CERRADURA CERRADA\n");
+}
+
+/**
+ * @brief Alterna el estado de la cerradura
+ * Función para el control manual mediante botón
+ */
 void Toggle_Lock_State() {
     if(currentState == CERRADO) {
-        currentState = ABIERTO;
+        AbrirCerradura();
     } else {
-        currentState = CERRADO;
+        CerrarCerradura();
     }
 }
 
-// Verificar alarma de temperatura
-void Check_Temperature_Alarm() {
-    if(temperature > TEMP_ALARM_THRESHOLD) {
-        fireAlarm = 1;
-    } else {
-        fireAlarm = 0;
-    }
-}
+/*
+ * ===============================================================================
+ * SECCIÓN 7: SISTEMA DE TELEMETRÍA
+ * ===============================================================================
+ * Funciones para envío de datos de monitoreo vía Bluetooth
+ */
 
-// Rutina de Servicio de Interrupción
-void __interrupt() ISR() {
-    // Interrupción UART (Bluetooth)
-    if(RCIF) {
-        bluetoothData = RCREG;
-        
-        // Procesar comando recibido
-        if(bluetoothData == 'A' || bluetoothData == 'a') {
-            currentState = ABIERTO;
-            UART_Write_String("Comando: ABRIR\n");
-        } else if(bluetoothData == 'C' || bluetoothData == 'c') {
-            currentState = CERRADO;
-            UART_Write_String("Comando: CERRAR\n");
-        }
-    }
+/**
+ * @brief Envía datos de telemetría por Bluetooth
+ * Formato: "TT.T|ESTADO\n" donde TT.T es la temperatura y ESTADO es ABIERTO/CERRADO
+ */
+void EnviarDatosBluetooth() {
+    float temp = LeerTemperaturaLM35();
     
-    // Interrupción externa (Botón)
-    if(INTF) {
-        INTF = 0;  // Limpiar bandera inmediatamente
-        
-        // Anti-rebote simple
-        __delay_ms(50);
-        
-        if(BOTON_MANUAL == 1) {
-            Toggle_Lock_State();
-            UART_Write_String("Boton presionado\n");
-            
-            // Esperar a que se suelte
-            while(BOTON_MANUAL == 1) {
-                __delay_ms(10);
-            }
-            __delay_ms(50);
-        }
-    }
+    // Convertir temperatura a entero con una decimal (ej: 24.5°C -> 245)
+    unsigned int temp_int = (unsigned int)(temp * 10.0f);
+    
+    // Determinar texto del estado actual
+    const char* estado = (currentState == ABIERTO) ? "ABIERTO" : "CERRADO";
+    
+    // Enviar temperatura dígito por dígito para evitar sprintf
+    UART_Write((char)('0' + (temp_int / 100)));     // Decenas
+    UART_Write((char)('0' + ((temp_int % 100) / 10))); // Unidades
+    UART_Write('.');                                 // Punto decimal
+    UART_Write((char)('0' + (temp_int % 10)));      // Decimal
+    UART_Write('|');                                 // Separador
+    UART_Write_Text(estado);                         // Estado de cerradura
+    UART_Write('\n');                                // Fin de línea
 }
 
-// Función principal
+/*
+ * ===============================================================================
+ * SECCIÓN 8: FUNCIÓN PRINCIPAL
+ * ===============================================================================
+ * Bucle principal del programa que coordina todas las funcionalidades
+ */
+
+/**
+ * @brief Función principal del programa
+ * Inicializa el sistema y ejecuta el bucle principal de control
+ */
 void main(void) {
-    // ===== CONFIGURACIÓN INICIAL =====
+    /*
+     * SUBSECCIÓN 8.1: CONFIGURACIÓN INICIAL DE HARDWARE
+     */
     
-    // Configurar puertos
-    TRISB = 0x01;   // RB0 como entrada (botón)
-    TRISD = 0x00;   // Puerto D como salida (LEDs)
-    PORTB = 0x00;   // Limpiar puertos
-    PORTD = 0x00;
+    // Configuración de direcciones de puerto (TRIS registers)
+    TRISC2 = 0;                 // RC2 (servo) como salida
+    TRISB0 = 1;                 // RB0 (botón) como entrada
+    TRISD0 = 0;                 // RD0 (LED verde) como salida
+    TRISD1 = 0;                 // RD1 (LED rojo) como salida
     
-    // Inicializar periféricos
-    Servo_Init();   // Configurar pin del servo
-    ADC_Init();     // Conversor analógico-digital
-    UART_Init();    // Comunicación Bluetooth
-    Button_Init();  // Botón con interrupción
+    // Estados iniciales de los pines
+    SERVO_PIN = 0;              // Servo en estado bajo
+    LED_ABIERTO = 0;            // LED verde apagado
+    LED_CERRADO = 1;            // LED rojo encendido (estado inicial cerrado)
     
-    // Habilitar interrupciones
-    RCIE = 1;       // Interrupción UART RX
-    INTE = 1;       // Interrupción externa INT
-    PEIE = 1;       // Interrupciones periféricas
-    GIE = 1;        // Interrupciones globales
+    // Variables para manejo del botón (anti-rebote)
+    unsigned char last_button = 0;     // Estado anterior del botón
+    unsigned char btn_pressed = 0;     // Flag de botón presionado
     
-    // Estado inicial
-    currentState = CERRADO;
-    Move_Servo(currentState);
+    /*
+     * SUBSECCIÓN 8.2: INICIALIZACIÓN DE MÓDULOS
+     */
     
-    // Mensaje de inicio
-    UART_Write_String("=== SISTEMA INICIADO ===\n");
-    UART_Write_String("PWM por software - 50Hz exactos\n");
-    UART_Write_String("Comandos: A=Abrir, C=Cerrar\n");
+    ADC_Init();                 // Inicializar conversor ADC
+    UART_Init();                // Inicializar comunicación UART
+    __delay_ms(500);            // Tiempo de estabilización del sistema
     
-    // ===== BUCLE PRINCIPAL =====
+    // Establecer estado inicial del sistema
+    CerrarCerradura();
+    UART_Write_Text("SISTEMA INICIADO - CERRADURA INTELIGENTE v1.0\n");
+    
+    /*
+     * SUBSECCIÓN 8.3: BUCLE PRINCIPAL DE CONTROL
+     */
+    
     while(1) {
-        // 1. Generar señal PWM para el servo (CRÍTICO - cada 20ms)
-        Generate_Servo_PWM();
+        /*
+         * CONTROL MANUAL POR BOTÓN
+         * Implementa detección de flanco ascendente con anti-rebote
+         */
         
-        // 2. Leer temperatura (solo cada pocos ciclos para no interferir con PWM)
-        static unsigned char temp_counter = 0;
-        temp_counter++;
-        if(temp_counter >= 50) {  // Leer temperatura cada 50 ciclos ≈ 1 segundo
-            temperature = Read_Temperature();
-            Check_Temperature_Alarm();
-            temp_counter = 0;
+        // Detectar flanco ascendente del botón
+        if(BOTON_MANUAL && !last_button) {
+            btn_pressed = 1;            // Marcar que se detectó presión
+        }
+        last_button = BOTON_MANUAL;     // Actualizar estado anterior
+        
+        // Procesar liberación del botón (flanco descendente)
+        if(btn_pressed && !BOTON_MANUAL) {
+            Toggle_Lock_State();        // Cambiar estado de cerradura
+            btn_pressed = 0;            // Limpiar flag
+            __delay_ms(50);             // Anti-rebote adicional
         }
         
-        // 3. Actualizar posición del servomotor
-        Move_Servo(currentState);
+        /*
+         * PROCESAMIENTO DE COMANDOS BLUETOOTH
+         * Verifica y procesa comandos recibidos vía UART
+         */
         
-        // 4. Controlar LEDs
-        if(fireAlarm) {
-            // Modo alarma: LED rojo parpadeando
-            LED_ABIERTO = 0;
-            ledBlinkCounter++;
-            if(ledBlinkCounter > 25) {  // Parpadeo cada ~500ms
-                LED_CERRADO = !LED_CERRADO;
-                ledBlinkCounter = 0;
+        if(UART_Data_Ready()) {
+            char cmd = UART_Read();     // Leer comando recibido
+            UART_Check_Errors();       // Verificar errores de comunicación
+            
+            // Echo del comando para depuración
+            UART_Write('<');
+            UART_Write(cmd);
+            UART_Write('>');
+            UART_Write('\n');
+            
+            // Procesar comandos específicos
+            switch(cmd) {
+                case 'A':               // Comando: Abrir cerradura
+                case 'a':
+                    AbrirCerradura();
+                    break;
+                    
+                case 'C':               // Comando: Cerrar cerradura
+                case 'c':
+                    CerrarCerradura();
+                    break;
+                    
+                case 'D':               // Comando: Enviar datos
+                case 'd':
+                    EnviarDatosBluetooth();
+                    break;
+                    
+                case 'S':               // Comando: Estado del sistema
+                case 's':
+                    UART_Write_Text("Estado: ");
+                    UART_Write_Text((currentState == ABIERTO) ? "ABIERTO" : "CERRADO");
+                    UART_Write('\n');
+                    break;
+                    
+                default:
+                    UART_Write_Text("ERROR: Comando no reconocido\n");
+                    break;
+            }
+        }
+        
+        /*
+         * MONITOREO DE TEMPERATURA Y SISTEMA DE ALARMA
+         * Verifica la temperatura y activa alarma si es necesaria
+         */
+        
+        static unsigned char alarm_counter = 0;
+        float temperatura_actual = LeerTemperaturaLM35();
+        
+        if(temperatura_actual > TEMP_ALARM_THRESHOLD) {
+            // Alarma por alta temperatura - parpadeo rápido
+            if(++alarm_counter >= 10) {     // Cada ~10ms
+                LED_CERRADO ^= 1;           // Alternar LED rojo
+                alarm_counter = 0;
+                
+                // Enviar alerta cada cierto tiempo
+                static unsigned char alert_timer = 0;
+                if(++alert_timer >= 100) {  // Cada ~1 segundo
+                    UART_Write_Text("ALERTA: TEMPERATURA ALTA - ");
+                    EnviarDatosBluetooth();
+                    alert_timer = 0;
+                }
             }
         } else {
-            // Modo normal: LED según estado
-            LED_ABIERTO = (currentState == ABIERTO);
-            LED_CERRADO = (currentState == CERRADO);
-            ledBlinkCounter = 0;
+            alarm_counter = 0;
+            // Restaurar estado normal de LEDs si no hay alarma
+            if(currentState == CERRADO) {
+                LED_CERRADO = 1;
+                LED_ABIERTO = 0;
+            } else {
+                LED_CERRADO = 0;
+                LED_ABIERTO = 1;
+            }
         }
         
-        // 5. Enviar datos por Bluetooth (solo ocasionalmente)
-        static unsigned char bt_counter = 0;
-        bt_counter++;
-        if(bt_counter >= 25) {  // Enviar datos cada 25 ciclos ≈ 500ms
-            // Estado de la cerradura
-            if(currentState == ABIERTO) {
-                UART_Write_String("S:A\n");
-            } else {
-                UART_Write_String("S:C\n");
-            }
-            
-            // Temperatura
-            char tempStr[20];
-            sprintf(tempStr, "T:%.1f\n", temperature);
-            UART_Write_String(tempStr);
-            
-            // Estado de alarma
-            if(fireAlarm) {
-                UART_Write_String("F:1\n");
-            } else {
-                UART_Write_String("F:0\n");
-            }
-            
-            bt_counter = 0;
+        /*
+         * TELEMETRÍA PERIÓDICA
+         * Envía datos del sistema cada cierto tiempo
+         */
+        
+        static unsigned int telemetry_counter = 0;
+        if(++telemetry_counter >= 5000) {   // Cada ~5 segundos
+            EnviarDatosBluetooth();
+            telemetry_counter = 0;
         }
         
-        // El bucle se repite cada ~20ms debido a Generate_Servo_PWM()
+        // Delay principal del bucle (1ms)
+        __delay_ms(1);
     }
 }

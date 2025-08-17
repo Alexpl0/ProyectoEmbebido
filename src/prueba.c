@@ -1,28 +1,77 @@
 #include <xc.h>
 
-// Configuración del PIC16F877A (ajustes críticos)
-#pragma config FOSC = HS        // Oscilador externo (HS, XT o INTOSC)
-#pragma config WDTE = OFF       // Watchdog desactivado
-#pragma config PWRTE = OFF      // Power-up Timer OFF
-#pragma config BOREN = OFF      // Brown-out Reset OFF
-#pragma config LVP = OFF        // Low-Voltage Programming OFF
-#pragma config CPD = OFF        // Protección de datos OFF
-#pragma config WRT = OFF        // Protección de escritura OFF
-#pragma config CP = OFF         // Protección de código OFF
+#pragma config FOSC = HS
+#pragma config WDTE = OFF
+#pragma config PWRTE = ON
+#pragma config BOREN = ON
+#pragma config LVP = OFF
+#pragma config CPD = OFF
+#pragma config WRT = OFF
+#pragma config CP = OFF
 
-#define _XTAL_FREQ 20000000      // Frecuencia del oscilador (4 MHz)
+#define _XTAL_FREQ 20000000  // 20 MHz
 
-void main() {
-    TRISD = 0x00;   // Todos los pines de PORTD como salidas
-    PORTD = 0x00;   // Inicializar PORTD en 0
-    
-    // Configurar pines analógicos como digitales (crucial en PIC16F877A)
-    ADCON1 = 0x06;  // Todos los pines ANx como digitales
+// Pines
+#define SERVO_PWM RC2
+#define BOTON_MANUAL RB0
+#define LED_ABIERTO RD0
+#define LED_CERRADO RD1
 
-    // Encender todos los LEDs conectados a RD0-RD7
-    PORTD = 0xFF;
+// Estados
+enum LockState {CERRADO, ABIERTO};
+enum LockState currentState = CERRADO;
+
+// Mover servo a 0�
+void Servo_MoveTo0() {
+    SERVO_PWM = 1;
+    __delay_us(500); 
+    SERVO_PWM = 0; 
+    __delay_ms(20); 
+    __delay_ms(1000); 
+}
+
+// Mover servo a 180�
+void Servo_MoveTo180() {
+    SERVO_PWM = 1;
+    __delay_us(2000); 
+    SERVO_PWM = 0; 
+    __delay_ms(20); 
+    __delay_ms(1000);
+}
+
+// Cambiar estado
+void Toggle_Lock_State() {
+    if(currentState == CERRADO) {
+        currentState = ABIERTO;
+        LED_ABIERTO = 1;
+        LED_CERRADO = 0;
+        Servo_MoveTo180();
+    } else {
+        currentState = CERRADO;
+        LED_ABIERTO = 0;
+        LED_CERRADO = 1;
+        Servo_MoveTo0();
+    }
+}
+
+
+// ==================== Main ====================
+void main(void) {
+    // Configurar puertos
+    TRISC2 = 0;   // salida servo
+    TRISB0 = 1;   // entrada bot�n
+    TRISD0 = 0;   // LEDs
+    TRISD1 = 0;
+
+    SERVO_PWM = 0;
+    LED_ABIERTO = 1;
+    LED_CERRADO = 0;
 
     while(1) {
-        // Bucle infinito
+        if(BOTON_MANUAL == 1) {
+            Toggle_Lock_State();   // cambia LEDs y mueve servo
+            while(BOTON_MANUAL == 1); // esperar a soltar
+            __delay_ms(10);           // anti-rebote
+        }
     }
 }
